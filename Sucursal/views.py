@@ -23,8 +23,13 @@ class SucursalesListView(View):
                     valor = 1
             sucursales = Sucursales.objects.all()
             sucursales_list = []
-            cuenta = Cuenta.objects.get(nombreusuario=request.user.username)
             for sucursal in sucursales:
+                ubicacion_info = {
+                    'id_ubicacion': sucursal.id_ubicacion.id_ubicacion if sucursal.id_ubicacion else None,
+                    'latitud': sucursal.id_ubicacion.latitud if sucursal.id_ubicacion else None,
+                    'longitud': sucursal.id_ubicacion.longitud if sucursal.id_ubicacion else None,
+                    'udescripcion': sucursal.id_ubicacion.udescripcion if sucursal.id_ubicacion else None,
+                }
                 sucursal_info = {
                     'id_sucursal': sucursal.id_sucursal,
                     'srazon_social': sucursal.srazon_social,
@@ -40,7 +45,7 @@ class SucursalesListView(View):
                     'id_geosector': getattr(sucursal.id_geosector, 'id_geosector', None),
                     'firmaelectronica': sucursal.firmaelectronica,
                     'id_empresa': sucursal.id_empresa_id,
-                    'id_ubicacion': getattr(sucursal.id_ubicacion, 'id_ubicacion', None),
+                    'id_ubicacion': ubicacion_info,
                     'id_cuenta':sucursal.id_cuenta.id_cuenta if valor==1 else None,
                     'imagensucursal': sucursal.imagensucursal,
                     
