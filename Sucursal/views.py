@@ -12,6 +12,8 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from Login.models import Cuenta
+from io import BytesIO
+from PIL import Image
 
 class SucursalesListView(View):
     def get(self, request, *args, **kwargs):
@@ -24,6 +26,14 @@ class SucursalesListView(View):
             sucursales = Sucursales.objects.all()
             sucursales_list = []
             for sucursal in sucursales:
+                if sucursal.imagensucursal:
+                    img = Image.open(BytesIO(base64.b64decode(sucursal.imagensucursal)))
+                    img = img.resize((500, 500))
+                    buffered = BytesIO()
+                    img.save(buffered, format="PNG")
+                    imagen_base64_resized = base64.b64encode(buffered.getvalue()).decode('utf-8')
+                else:
+                    imagen_base64_resized = None
                 ubicacion_info = {
                     'id_ubicacion': sucursal.id_ubicacion.id_ubicacion if sucursal.id_ubicacion else None,
                     'latitud': sucursal.id_ubicacion.latitud if sucursal.id_ubicacion else None,
@@ -47,7 +57,7 @@ class SucursalesListView(View):
                     'id_empresa': sucursal.id_empresa_id,
                     'id_ubicacion': ubicacion_info,
                     'id_cuenta':sucursal.id_cuenta.id_cuenta if valor==1 else None,
-                    'imagensucursal': sucursal.imagensucursal,
+                    'imagensucursal': imagen_base64_resized,
                     
                 }
                 sucursales_list.append(sucursal_info)
@@ -78,6 +88,7 @@ class Crearsucursal(View):
             firmaelectronica = data.get('firma')
             id_ubicacion = data.get('ubicacion')
             imagen= data.get('imagen')
+            imagen_binaria = base64.b64decode(imagen)
 
 
 
@@ -95,7 +106,7 @@ class Crearsucursal(View):
                 firmaelectronica=firmaelectronica,
                 id_empresa=Empresa.objects.filter(id_empresa=1).first(),
                 id_ubicacion=Ubicaciones.objects.create(**id_ubicacion) if id_ubicacion is not None else None,
-                imagensucursal=imagen,
+                imagensucursal=imagen_binaria,
                 id_cuenta=cuenta
             )
             return JsonResponse({'mensaje': 'Sucursal creada con éxito'});

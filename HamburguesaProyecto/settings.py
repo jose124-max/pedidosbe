@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'Bodega',
     'Producto',
     'Combos',
-    'corsheaders'
+    'corsheaders',
+    'avisos'
 
 ]
 
