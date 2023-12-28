@@ -8,6 +8,7 @@ from django.views import View
 from django.db import transaction
 import json
 from .models import Cuenta, Clientes
+from django.contrib.auth.hashers import make_password, check_password
 from Administrador.models import Administrador
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -28,14 +29,12 @@ class CrearUsuarioView(View):
             correorecuperacion=data.get('correorecuperacion')
             ubicacion=data.get('ubicacion')
 
-            # Crear un nuevo usuario usando el modelo User de Django
             user = User.objects.create_user(username=nombre_usuario, password=contrasenia)
 
 
-            # Crear una nueva cuenta asociada al usuario
             cuenta_nueva  = Cuenta.objects.create(
                 nombreusuario=nombre_usuario,
-                contrasenia=contrasenia,
+                contrasenia= make_password(contrasenia),
                 estadocuenta ='1',
                 rol = 'C',
                 correorecuperacion =correorecuperacion

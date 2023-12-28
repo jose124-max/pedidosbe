@@ -24,23 +24,18 @@ class AvisosPrincipalesListView(View):
             for aviso in avisos_principales:
                 if aviso.imagen:
                     try:
-                        # Decodificar la imagen base64
                         byteImg = base64.b64decode(aviso.imagen)
-
-                        # Convertir los bytes a una cadena base64
                         imagen_base64 = base64.b64encode(byteImg).decode('utf-8')
-
-                        # Crear un diccionario con la información del aviso
                         aviso_info = {
                             'id_aviso': aviso.id_aviso,
                             'id_empresa': aviso.id_empresa.id_empresa if aviso.id_empresa else None,
                             'titulo': aviso.titulo,
                             'descripcion': aviso.descripcion,
                             'imagen': imagen_base64,
+
                         }
                         avisos_list.append(aviso_info)
                     except Exception as img_error:
-                        # Puedes imprimir o loggear el error para investigar más
                         print(f"Error al procesar imagen: {str(img_error)}")
                 else:
                     aviso_info = {
@@ -68,33 +63,50 @@ class CrearAviso(View):
             titulo = request.POST.get('titulo')
             descripcion = request.POST.get('descripcion')
 
-            # Recibir la imagen como FormData
             imagen_archivo = request.FILES.get('imagen')
-
-            # Verificar que se ha enviado una imagen
+            image_encoded=None
             if imagen_archivo:
-                # Leer y procesar la imagen
                 try:
-                    image = Image.open(imagen_archivo)
-                    # Puedes realizar cualquier procesamiento adicional aquí si es necesario
+                    image_read = imagen_archivo.read()
+                    image_64_encode = base64.b64encode(image_read)
+                    image_encoded = image_64_encode.decode('utf-8')
+                except UnidentifiedImageError as img_error:
+                    return JsonResponse({'error': f"Error al procesar imagen: {str(img_error)}"}, status=400)
+            aviso=AvisosPrincipales.objects.create(
+                titulo=titulo,
+                descripcion=descripcion,
+                imagen=image_64_encode,
+                id_empresa=Empresa.objects.filter(id_empresa=1).first()
+            )
+            return JsonResponse({'mensaje': 'Se creo el aviso'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+@method_decorator(csrf_exempt, name='dispatch')
+class EditarAviso(View):
+    @method_decorator(login_required)
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        try:
+            cuenta = Cuenta.objects.get(nombreusuario=request.user.username)
+            if cuenta.rol != 'S':
+                return JsonResponse({'error': 'No tienes permisos para editar un aviso'}, status=403)
 
-                    # Convertir la imagen a bytes
+            aviso_id = kwargs.get('id_aviso')
+            aviso = AvisosPrincipales.objects.get(id_aviso=aviso_id)
+
+            aviso.titulo = request.POST.get('titulo')
+            aviso.descripcion = request.POST.get('descripcion')
+            nueva_imagen = request.FILES.get('nueva_imagen')
+            if nueva_imagen:
+                try:
+                    image = Image.open(nueva_imagen)
                     byte_io = BytesIO()
                     image.save(byte_io, format="PNG")
                     byte_img = byte_io.getvalue()
-
-                    # Guardar la imagen en el modelo
-                    aviso_nuevo = AvisosPrincipales.objects.create(
-                        id_empresa=Empresa.objects.filter(id_empresa=1).first(),
-                        titulo=titulo,
-                        descripcion=descripcion,
-                        imagen=byte_img
-                    )
-
-                    return JsonResponse({'mensaje': 'Aviso creado con éxito'})
+                    aviso.imagen=byte_img
                 except UnidentifiedImageError as img_error:
                     return JsonResponse({'error': f"Error al procesar imagen: {str(img_error)}"}, status=400)
-            else:
-                return JsonResponse({'error': 'No se proporcionó ninguna imagen'}, status=400)
+            aviso.save()
+            return JsonResponse({'mensaje': 'Aviso editado con éxito'})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)

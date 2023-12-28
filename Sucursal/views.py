@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views import View
 from .models import Sucursales
+import base64
 from horariossemanales.models import Horariossemanales
 from GeoSector.models import Geosectores
 from Empresa.models import Empresa
@@ -88,9 +89,10 @@ class Crearsucursal(View):
             firmaelectronica = data.get('firma')
             id_ubicacion = data.get('ubicacion')
             imagen= data.get('imagen')
-            imagen_binaria = base64.b64decode(imagen)
-
-
+            if imagen!= None:
+                imagen_binaria = base64.b64decode(imagen)
+            else:
+                imagen_binaria=None
 
             sucursal_nueva  = Sucursales.objects.create(
                 srazon_social=razon_social,

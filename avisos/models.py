@@ -6,7 +6,7 @@ class AvisosPrincipales(models.Model):
     id_empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, db_column="id_empresa")
     titulo = models.CharField(max_length=150)
     descripcion = models.CharField(max_length=500, blank=True, null=True)
-    imagen = models.BinaryField()
+    imagen = models.BinaryField(blank=True, null=True)
 
     class Meta:
         managed = False

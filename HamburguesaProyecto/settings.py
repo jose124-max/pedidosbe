@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'Producto',
     'Combos',
     'corsheaders',
-    'avisos'
+    'avisos',
+    'Empleados'
 
 ]
 
@@ -86,7 +87,7 @@ WSGI_APPLICATION = 'HamburguesaProyecto.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'PedidosDB3',
+        'NAME': 'PedidosDB',
         'USER': 'postgres',
         'PASSWORD': '12345',
         'HOST': 'localhost',
